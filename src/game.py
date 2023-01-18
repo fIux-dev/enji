@@ -106,6 +106,11 @@ class Game:
     def remove_player(self, discord_user: Union[Member, User]) -> None:
         del self.players[discord_user.id]
 
+    def select_new_host(self) -> None:
+        if not self.players:
+            return
+        self.host = random.choice(self.players.values())
+
     async def intialize_game(self) -> None:
         self.jack_id = random.choice(list(self.players.keys()))
         self.players[self.jack_id].is_jack = True
