@@ -4,16 +4,18 @@ Discord bot for playing the [Jack of Hearts game](https://aliceinborderland.fand
 
 ----
 ## Running
-To run your own instance:
+
+To run your own instance, you'll first need to create your own Discord bot account: https://discordpy.readthedocs.io/en/stable/discord.html
+
+Then replace the `TOKEN` in main.py with your own token and run:
 ```
-$ cd src
+$ pip install requirements.txt
+# cd src
 $ python main.py
 ```
 
-Set up a bot and replace `TOKEN` with your own token.
-
 ### Public version
-Currently the bot is not available publicly. Public version TBD
+(tbd) Currently the bot is not available publicly.
 
 ----
 
