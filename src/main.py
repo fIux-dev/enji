@@ -131,6 +131,13 @@ async def leave_game(ctx):
     if games[ctx.guild.id].state == GameState.NOT_STARTED:
         games[ctx.guild.id].remove_player(ctx.author)
         if len(games[ctx.guild.id].players) > 0:
+            if ctx.author == games[ctx.guild.id].host:
+                games[ctx.guild.id].select_new_host()
+                await ctx.send(
+                    f"The previous game host {ctx.author} left the game, the "
+                    f"new host is: {games[ctx.guild.id].host}"
+                )
+
             players = ", ".join(
                 [str(player.discord_user) for player in games[ctx.guild.id].players.values()]
             )
@@ -139,10 +146,11 @@ async def leave_game(ctx):
                 f"Current players: {len(games[ctx.guild.id].players)} ({players})"
             )
         else:
-            await ctx.send(f"All players have left the game, quitting the game.")
+            await ctx.send("All players have left the game, quitting the game.")
             del games[ctx.guild.id]
     elif games[ctx.guild.id].state in {GameState.ANSWER_STAGE, GameState.DISCUSSION_STAGE}:
         games[ctx.guild.id].kill_player(ctx.author)
+        await ctx.send(f"**{ctx.author} died!")
     else:
         await ctx.send("**ERROR**: Unable to leave game at this time.")
 
@@ -223,6 +231,7 @@ async def start_game(ctx):
                     f"{utils.suit_to_emoji(guess)} but your suit was "
                     f"{utils.suit_to_emoji(player.suit)}. You died!"
                 )
+                await ctx.send(f"**{player.discord_user} died!")
             else:
                 await player.send_dm(
                     f"**CORRECT!**\n{player.discord_user} survived round "
@@ -294,6 +303,8 @@ async def start_game(ctx):
                 f"Alive: {len(alive_players)} ({alive_players_list})"
             )
 
+        del games[ctx.guild.id]
+
     await games[ctx.guild.id].intialize_game()
     await asyncio.gather(
         *[
@@ -326,8 +337,18 @@ async def show_suits(ctx, guild_id: Optional[int] = None):
             await ctx.send("Usage: `show <guild_id>`")
             return
 
+        guild = bot.get_guild(guild_id)
+        member = guild.get_member(ctx.author.id)
+        if not member:
+            await ctx.send(f"{ctx.author} is not a member of server {guild}.")
+            return
+
         if guild_id not in games:
             await ctx.send("No game is happening in this server.")
+            return
+
+        if member.id not in games[guild_id].players:
+            await ctx.send(f"{ctx.author} is not part of the current game in server {guild}.")
             return
 
         if games[guild_id].state != GameState.DISCUSSION_STAGE:
@@ -358,7 +379,7 @@ async def show_suits(ctx, guild_id: Optional[int] = None):
     else:
         await ctx.send(
             "This command can only be used in DM! Please DM me with "
-            f"`!show {guild_id}` to get a list of other players' suits "
+            f"`!show {ctx.guild.id}` to get a list of other players' suits "
             "excluding your own."
         )
 
